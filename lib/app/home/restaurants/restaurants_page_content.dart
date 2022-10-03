@@ -1,5 +1,6 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:pizza_zoliborz/app/home/restaurants/cubit/restaurants_cubit.dart';
 
 class RestaurantPageContent extends StatelessWidget {
   const RestaurantPageContent({
@@ -8,20 +9,25 @@ class RestaurantPageContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-        stream: FirebaseFirestore.instance
-            .collection('restaurants')
-            .orderBy('rating', descending: true)
-            .snapshots(),
-        builder: (context, snapshot) {
-          if (snapshot.hasError) {
-            return const Center(child: Text('Something went wrong'));
-          }
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: Text('Loading'));
+    return BlocProvider(
+      create: (context) => RestaurantsCubit()..start(),
+      child: BlocBuilder<RestaurantsCubit, RestaurantsState>(
+        builder: (context, state) {
+          if (state.errorMessage.isNotEmpty) {
+            return Center(
+              child: Text(
+                'Something went wrong: ${state.errorMessage}',
+              ),
+            );
           }
 
-          final documents = snapshot.data!.docs;
+          if (state.isLoading) {
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
+          }
+
+          final documents = state.documents;
 
           return ListView(
             children: [
@@ -45,6 +51,8 @@ class RestaurantPageContent extends StatelessWidget {
               ],
             ],
           );
-        });
+        },
+      ),
+    );
   }
 }
