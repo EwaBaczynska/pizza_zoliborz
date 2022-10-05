@@ -1,8 +1,9 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'app/features/home/home_page.dart';
-import 'app/features/login/login_page.dart';
-import 'firebase_options.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:pizza_zoliborz/app/cubit/root_cubit.dart';
+import 'package:pizza_zoliborz/app/features/home/home_page.dart';
+
+import 'login/login_page.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
@@ -26,14 +27,17 @@ class RootPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<User?>(
-        stream: FirebaseAuth.instance.authStateChanges(),
-        builder: (context, snapshot) {
-          final user = snapshot.data;
+    return BlocProvider(
+      create: (context) => RootCubit()..start(),
+      child: BlocBuilder<RootCubit, RootState>(
+        builder: (context, state) {
+          final user = state.user;
           if (user == null) {
             return LoginPage();
           }
           return HomePage(user: user);
-        });
+        },
+      ),
+    );
   }
 }
